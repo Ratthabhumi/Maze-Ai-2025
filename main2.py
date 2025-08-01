@@ -10,10 +10,14 @@ class HardMazeGame:
     def __init__(self, width=35, height=35):
         self.width = width
         self.height = height
-        self.cell_size = 18
+        self.cell_size = 40
         self.maze = []
         self.player_pos = [1, 1]
         self.end_pos = [width - 2, height - 2]
+        # Camera/viewport for zooming
+        self.camera_x = 0
+        self.camera_y = 0
+        self.zoom_factor = 2.0  # 2x zoom
 
         # Difficulty features
         self.visibility_radius = 4  # Limited vision
@@ -46,7 +50,8 @@ class HardMazeGame:
         # Create the main window
         self.root = tk.Tk()
         self.root.title("HARD Maze Game - Survival Mode")
-        self.root.resizable(False, False)
+        self.root.geometry("800x900")  # Force bigger window size
+        # self.root.resizable(True, True)
 
         # Create canvas
         canvas_width = self.width * self.cell_size
@@ -290,7 +295,7 @@ class HardMazeGame:
                     break
 
     def draw_maze(self):
-        """Draw the maze with limited visibility or full map if revealed"""
+        """Draw the maze with camera zoom system"""
         self.canvas.delete("all")
 
         px, py = self.player_pos
@@ -305,10 +310,29 @@ class HardMazeGame:
                 self.has_flashlight = False
                 self.flashlight_start = None
 
-        # Draw the maze based on visibility mode
-        for y in range(self.height):
-            for x in range(self.width):
-                x1, y1 = x * self.cell_size, y * self.cell_size
+        # Camera/viewport calculations for zoom
+        viewport_width = int(self.width / self.zoom_factor)
+        viewport_height = int(self.height / self.zoom_factor)
+
+        # Center camera on player
+        self.camera_x = max(
+            0, min(self.width - viewport_width, px - viewport_width // 2)
+        )
+        self.camera_y = max(
+            0, min(self.height - viewport_height, py - viewport_height // 2)
+        )
+
+        # Draw the maze based on visibility mode and camera viewport
+        for y in range(
+            self.camera_y, min(self.camera_y + viewport_height, self.height)
+        ):
+            for x in range(
+                self.camera_x, min(self.camera_x + viewport_width, self.width)
+            ):
+                # Calculate screen coordinates
+                screen_x = (x - self.camera_x) * self.cell_size
+                screen_y = (y - self.camera_y) * self.cell_size
+                x1, y1 = screen_x, screen_y
                 x2, y2 = x1 + self.cell_size, y1 + self.cell_size
 
                 # Check if cell should be visible
@@ -335,130 +359,184 @@ class HardMazeGame:
                     )
 
         # Draw visible special items (or all if map revealed)
-        self.draw_special_items(px, py, vision_range)
+        self.draw_special_items_zoomed(px, py, vision_range)
 
         # Draw player
-        self.draw_player()
+        self.draw_player_zoomed()
 
-    def draw_special_items(self, px, py, vision_range):
-        """Draw keys, teleporters, enemy, and other special items"""
+    def draw_special_items_zoomed(self, px, py, vision_range):
+        """Draw keys, teleporters, enemy, and other special items with zoom"""
 
         # Draw keys
         for kx, ky in self.keys:
-            distance = math.sqrt((kx - px) ** 2 + (ky - py) ** 2)
-            if self.map_revealed or distance <= vision_range:
-                x1, y1 = kx * self.cell_size + 4, ky * self.cell_size + 4
-                x2, y2 = x1 + self.cell_size - 8, y1 + self.cell_size - 8
-                self.canvas.create_oval(x1, y1, x2, y2, fill="gold", outline="orange")
-                self.canvas.create_text(
-                    kx * self.cell_size + self.cell_size // 2,
-                    ky * self.cell_size + self.cell_size // 2,
-                    text="🗝",
-                    font=("Arial", 8),
-                )
+            # Check if key is in viewport
+            if self.camera_x <= kx < self.camera_x + int(
+                self.width / self.zoom_factor
+            ) and self.camera_y <= ky < self.camera_y + int(
+                self.height / self.zoom_factor
+            ):
+
+                distance = math.sqrt((kx - px) ** 2 + (ky - py) ** 2)
+                if self.map_revealed or distance <= vision_range:
+                    screen_x = (kx - self.camera_x) * self.cell_size
+                    screen_y = (ky - self.camera_y) * self.cell_size
+                    x1, y1 = screen_x + 4, screen_y + 4
+                    x2, y2 = x1 + self.cell_size - 8, y1 + self.cell_size - 8
+                    self.canvas.create_oval(
+                        x1, y1, x2, y2, fill="gold", outline="orange"
+                    )
+                    self.canvas.create_text(
+                        screen_x + self.cell_size // 2,
+                        screen_y + self.cell_size // 2,
+                        text="🗝",
+                        font=("Arial", 8),
+                    )
 
         # Draw teleporters
         for pos1, pos2 in self.teleporters:
             for tx, ty in [pos1, pos2]:
-                distance = math.sqrt((tx - px) ** 2 + (ty - py) ** 2)
-                if self.map_revealed or distance <= vision_range:
-                    x1, y1 = tx * self.cell_size + 2, ty * self.cell_size + 2
-                    x2, y2 = x1 + self.cell_size - 4, y1 + self.cell_size - 4
-                    self.canvas.create_oval(
-                        x1, y1, x2, y2, fill="purple", outline="magenta"
-                    )
-                    self.canvas.create_text(
-                        tx * self.cell_size + self.cell_size // 2,
-                        ty * self.cell_size + self.cell_size // 2,
-                        text="◉",
-                        fill="white",
-                        font=("Arial", 8),
-                    )
+                if self.camera_x <= tx < self.camera_x + int(
+                    self.width / self.zoom_factor
+                ) and self.camera_y <= ty < self.camera_y + int(
+                    self.height / self.zoom_factor
+                ):
+
+                    distance = math.sqrt((tx - px) ** 2 + (ty - py) ** 2)
+                    if self.map_revealed or distance <= vision_range:
+                        screen_x = (tx - self.camera_x) * self.cell_size
+                        screen_y = (ty - self.camera_y) * self.cell_size
+                        x1, y1 = screen_x + 2, screen_y + 2
+                        x2, y2 = x1 + self.cell_size - 4, y1 + self.cell_size - 4
+                        self.canvas.create_oval(
+                            x1, y1, x2, y2, fill="purple", outline="magenta"
+                        )
+                        self.canvas.create_text(
+                            screen_x + self.cell_size // 2,
+                            screen_y + self.cell_size // 2,
+                            text="◉",
+                            fill="white",
+                            font=("Arial", 8),
+                        )
 
         # Draw traps (only if map is revealed - they're normally invisible!)
         if self.map_revealed:
             for trap_x, trap_y in self.traps:
-                x1, y1 = trap_x * self.cell_size + 3, trap_y * self.cell_size + 3
-                x2, y2 = x1 + self.cell_size - 6, y1 + self.cell_size - 6
-                self.canvas.create_rectangle(
-                    x1, y1, x2, y2, fill="darkred", outline="red", stipple="gray50"
-                )
-                self.canvas.create_text(
-                    trap_x * self.cell_size + self.cell_size // 2,
-                    trap_y * self.cell_size + self.cell_size // 2,
-                    text="⚠",
-                    fill="red",
-                    font=("Arial", 8),
-                )
+                if self.camera_x <= trap_x < self.camera_x + int(
+                    self.width / self.zoom_factor
+                ) and self.camera_y <= trap_y < self.camera_y + int(
+                    self.height / self.zoom_factor
+                ):
+
+                    screen_x = (trap_x - self.camera_x) * self.cell_size
+                    screen_y = (trap_y - self.camera_y) * self.cell_size
+                    x1, y1 = screen_x + 3, screen_y + 3
+                    x2, y2 = x1 + self.cell_size - 6, y1 + self.cell_size - 6
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2, fill="darkred", outline="red", stipple="gray50"
+                    )
+                    self.canvas.create_text(
+                        screen_x + self.cell_size // 2,
+                        screen_y + self.cell_size // 2,
+                        text="⚠",
+                        fill="red",
+                        font=("Arial", 8),
+                    )
 
         # Draw enemy
         if self.enemy_pos:
             ex, ey = self.enemy_pos
-            distance = math.sqrt((ex - px) ** 2 + (ey - py) ** 2)
-            if self.map_revealed or distance <= vision_range:
-                x1, y1 = ex * self.cell_size + 1, ey * self.cell_size + 1
-                x2, y2 = x1 + self.cell_size - 2, y1 + self.cell_size - 2
-                self.canvas.create_rectangle(
-                    x1, y1, x2, y2, fill="red", outline="darkred"
-                )
-                self.canvas.create_text(
-                    ex * self.cell_size + self.cell_size // 2,
-                    ey * self.cell_size + self.cell_size // 2,
-                    text="👹",
-                    font=("Arial", 10),
-                )
+            if self.camera_x <= ex < self.camera_x + int(
+                self.width / self.zoom_factor
+            ) and self.camera_y <= ey < self.camera_y + int(
+                self.height / self.zoom_factor
+            ):
+
+                distance = math.sqrt((ex - px) ** 2 + (ey - py) ** 2)
+                if self.map_revealed or distance <= vision_range:
+                    screen_x = (ex - self.camera_x) * self.cell_size
+                    screen_y = (ey - self.camera_y) * self.cell_size
+                    x1, y1 = screen_x + 1, screen_y + 1
+                    x2, y2 = x1 + self.cell_size - 2, y1 + self.cell_size - 2
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2, fill="red", outline="darkred"
+                    )
+                    self.canvas.create_text(
+                        screen_x + self.cell_size // 2,
+                        screen_y + self.cell_size // 2,
+                        text="👹",
+                        font=("Arial", 10),
+                    )
 
         # Draw start position
-        distance = math.sqrt((1 - px) ** 2 + (1 - py) ** 2)
-        if self.map_revealed or distance <= vision_range:
-            x1, y1 = 1 * self.cell_size + 2, 1 * self.cell_size + 2
-            x2, y2 = x1 + self.cell_size - 4, y1 + self.cell_size - 4
-            self.canvas.create_rectangle(
-                x1, y1, x2, y2, fill="lightgreen", outline="green"
-            )
-            self.canvas.create_text(
-                1 * self.cell_size + self.cell_size // 2,
-                1 * self.cell_size + self.cell_size // 2,
-                text="START",
-                fill="darkgreen",
-                font=("Arial", 6),
-            )
+        if self.camera_x <= 1 < self.camera_x + int(
+            self.width / self.zoom_factor
+        ) and self.camera_y <= 1 < self.camera_y + int(self.height / self.zoom_factor):
+
+            distance = math.sqrt((1 - px) ** 2 + (1 - py) ** 2)
+            if self.map_revealed or distance <= vision_range:
+                screen_x = (1 - self.camera_x) * self.cell_size
+                screen_y = (1 - self.camera_y) * self.cell_size
+                x1, y1 = screen_x + 2, screen_y + 2
+                x2, y2 = x1 + self.cell_size - 4, y1 + self.cell_size - 4
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2, fill="lightgreen", outline="green"
+                )
+                self.canvas.create_text(
+                    screen_x + self.cell_size // 2,
+                    screen_y + self.cell_size // 2,
+                    text="START",
+                    fill="darkgreen",
+                    font=("Arial", 6),
+                )
 
         # Draw end position
         end_x, end_y = self.end_pos
-        distance = math.sqrt((end_x - px) ** 2 + (end_y - py) ** 2)
-        if self.map_revealed or distance <= vision_range:
-            x1, y1 = end_x * self.cell_size + 2, end_y * self.cell_size + 2
-            x2, y2 = x1 + self.cell_size - 4, y1 + self.cell_size - 4
-            if self.keys_collected >= self.required_keys:
-                self.canvas.create_rectangle(
-                    x1, y1, x2, y2, fill="lightcoral", outline="red"
-                )
-                self.canvas.create_text(
-                    end_x * self.cell_size + self.cell_size // 2,
-                    end_y * self.cell_size + self.cell_size // 2,
-                    text="EXIT",
-                    fill="darkred",
-                    font=("Arial", 6),
-                )
-            else:
-                self.canvas.create_rectangle(
-                    x1, y1, x2, y2, fill="gray", outline="darkgray"
-                )
-                self.canvas.create_text(
-                    end_x * self.cell_size + self.cell_size // 2,
-                    end_y * self.cell_size + self.cell_size // 2,
-                    text="LOCKED",
-                    fill="white",
-                    font=("Arial", 5),
-                )
+        if self.camera_x <= end_x < self.camera_x + int(
+            self.width / self.zoom_factor
+        ) and self.camera_y <= end_y < self.camera_y + int(
+            self.height / self.zoom_factor
+        ):
 
-    def draw_player(self):
-        """Draw player at current position"""
+            distance = math.sqrt((end_x - px) ** 2 + (end_y - py) ** 2)
+            if self.map_revealed or distance <= vision_range:
+                screen_x = (end_x - self.camera_x) * self.cell_size
+                screen_y = (end_y - self.camera_y) * self.cell_size
+                x1, y1 = screen_x + 2, screen_y + 2
+                x2, y2 = x1 + self.cell_size - 4, y1 + self.cell_size - 4
+                if self.keys_collected >= self.required_keys:
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2, fill="lightcoral", outline="red"
+                    )
+                    self.canvas.create_text(
+                        screen_x + self.cell_size // 2,
+                        screen_y + self.cell_size // 2,
+                        text="EXIT",
+                        fill="darkred",
+                        font=("Arial", 6),
+                    )
+                else:
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2, fill="gray", outline="darkgray"
+                    )
+                    self.canvas.create_text(
+                        screen_x + self.cell_size // 2,
+                        screen_y + self.cell_size // 2,
+                        text="LOCKED",
+                        fill="white",
+                        font=("Arial", 5),
+                    )
+
+    def draw_player_zoomed(self):
+        """Draw player at current position with zoom"""
         self.canvas.delete("player")
         px, py = self.player_pos
-        center_x = px * self.cell_size + self.cell_size // 2
-        center_y = py * self.cell_size + self.cell_size // 2
+
+        # Convert world coordinates to screen coordinates
+        screen_x = (px - self.camera_x) * self.cell_size
+        screen_y = (py - self.camera_y) * self.cell_size
+
+        center_x = screen_x + self.cell_size // 2
+        center_y = screen_y + self.cell_size // 2
         radius = self.cell_size // 3
 
         self.canvas.create_oval(
@@ -1130,5 +1208,5 @@ Algorithm Explanations:
 
 
 if __name__ == "__main__":
-    game = HardMazeGame(width=35, height=35)
+    game = HardMazeGame(width=20, height=20)
     game.run()
