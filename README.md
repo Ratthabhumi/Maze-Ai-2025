@@ -1,2 +1,2 @@
 To run the project open vs code and type
-python main2.py
+python main2.py in terminal
