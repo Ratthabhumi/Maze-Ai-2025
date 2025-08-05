@@ -81,6 +81,8 @@ class HardMazeGame:
         # Center window on screen
         self.center_window()
 
+        self.zoom_window = 9  # Number of cells to show in zoom mode (must be odd)
+
         # Generate initial maze
         self.generate_maze()
         self.setup_difficulty_features()
@@ -471,6 +473,75 @@ class HardMazeGame:
                 self.has_flashlight = False
                 self.flashlight_start = None
 
+        # --- ZOOM LOGIC ---
+        if not map_fully_visible:
+            # Zoomed-in: only draw a window around the player
+            half = self.zoom_window // 2
+            start_x = max(0, px - half)
+            end_x = min(self.width, px + half + 1)
+            start_y = max(0, py - half)
+            end_y = min(self.height, py + half + 1)
+
+            # Adjust canvas size for zoom
+            zoom_cell_size = self.cell_size * 2  # Make cells bigger when zoomed in
+            self.canvas.config(
+                width=(end_x - start_x) * zoom_cell_size,
+                height=(end_y - start_y) * zoom_cell_size,
+            )
+
+            for y in range(start_y, end_y):
+                for x in range(start_x, end_x):
+                    distance = math.sqrt((x - px) ** 2 + (y - py) ** 2)
+                    cell_visible = distance <= vision_range
+
+                    x1 = (x - start_x) * zoom_cell_size
+                    y1 = (y - start_y) * zoom_cell_size
+                    x2 = x1 + zoom_cell_size
+                    y2 = y1 + zoom_cell_size
+
+                    if cell_visible:
+                        if self.maze[y][x] == 1:
+                            self.canvas.create_rectangle(
+                                x1, y1, x2, y2, fill="#444444", outline="#666666", width=1
+                            )
+                        else:
+                            self.canvas.create_rectangle(
+                                x1, y1, x2, y2, fill="#f0f0f0", outline="#cccccc", width=1
+                            )
+                    else:
+                        self.canvas.create_rectangle(
+                            x1, y1, x2, y2, fill="black", outline="black", width=0
+                        )
+
+            # Draw special items, player, and solution path in zoomed coordinates
+            effective_vision = float('inf') if map_fully_visible else vision_range
+            self.draw_special_items_zoom(px, py, effective_vision, start_x, start_y, zoom_cell_size)
+            self.draw_player_zoom(start_x, start_y, zoom_cell_size)
+
+            # Draw solution path if it exists (zoomed)
+            if self.solution_path:
+                line_width = max(2, zoom_cell_size // 6)
+                for i in range(len(self.solution_path) - 1):
+                    x1, y1 = self.solution_path[i]
+                    x2, y2 = self.solution_path[i + 1]
+                    if start_x <= x1 < end_x and start_y <= y1 < end_y and start_x <= x2 < end_x and start_y <= y2 < end_y:
+                        center1_x = (x1 - start_x) * zoom_cell_size + zoom_cell_size // 2
+                        center1_y = (y1 - start_y) * zoom_cell_size + zoom_cell_size // 2
+                        center2_x = (x2 - start_x) * zoom_cell_size + zoom_cell_size // 2
+                        center2_y = (y2 - start_y) * zoom_cell_size + zoom_cell_size // 2
+                        self.canvas.create_line(
+                            center1_x, center1_y, center2_x, center2_y,
+                            fill="orange", width=line_width, tags="solution"
+                        )
+            return
+
+        # --- Normal (full) view ---
+        # Restore canvas size
+        self.canvas.config(
+            width=self.width * self.cell_size,
+            height=self.height * self.cell_size,
+        )
+
         for y in range(self.height):
             for x in range(self.width):
                 # Calculate distance from player
@@ -613,8 +684,10 @@ class HardMazeGame:
         # Draw start position (only if visible)
         if math.sqrt((1 - px) ** 2 + (1 - py) ** 2) <= vision_range:
             margin = max(2, self.cell_size // 8)
-            x1, y1 = 1 * self.cell_size + margin, 1 * self.cell_size + margin
-            x2, y2 = x1 + self.cell_size - 2*margin, y1 + self.cell_size - 2*margin
+            x1 = 1 * self.cell_size + margin
+            y1 = 1 * self.cell_size + margin
+            x2 = x1 + self.cell_size - 2*margin
+            y2 = y1 + self.cell_size - 2*margin
             self.canvas.create_rectangle(
                 x1, y1, x2, y2, fill="lightgreen", outline="green", width=2
             )
@@ -623,8 +696,10 @@ class HardMazeGame:
         end_x, end_y = self.end_pos
         if math.sqrt((end_x - px) ** 2 + (end_y - py) ** 2) <= vision_range:
             margin = max(2, self.cell_size // 8)
-            x1, y1 = end_x * self.cell_size + margin, end_y * self.cell_size + margin
-            x2, y2 = x1 + self.cell_size - 2*margin, y1 + self.cell_size - 2*margin
+            x1 = end_x * self.cell_size + margin
+            y1 = end_y * self.cell_size + margin
+            x2 = x1 + self.cell_size - 2*margin
+            y2 = y1 + self.cell_size - 2*margin
             
             if self.keys_collected >= self.required_keys:
                 self.canvas.create_rectangle(
@@ -651,6 +726,129 @@ class HardMazeGame:
                     fill="white"
                 )
 
+    def draw_special_items_zoom(self, px, py, vision_range, start_x, start_y, cell_size):
+        """Draw keys, teleporters, enemy, etc. within vision range for zoomed-in view"""
+        # Draw traps if map is revealed (normally invisible)
+        if vision_range == float('inf'):  # Map is fully revealed
+            for trap_x, trap_y in self.traps:
+                margin = max(2, cell_size // 8)
+                x1, y1 = (trap_x - start_x) * cell_size + margin, (trap_y - start_y) * cell_size + margin
+                x2, y2 = x1 + cell_size - 2*margin, y1 + cell_size - 2*margin
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2, fill="darkred", outline="red", width=1
+                )
+                self.canvas.create_text(
+                    (trap_x - start_x) * cell_size + cell_size // 2,
+                    (trap_y - start_y) * cell_size + cell_size // 2,
+                    text="!",
+                    fill="white",
+                    font=("Arial", self.font_size_small, "bold"),
+                )
+
+        # Draw keys
+        for kx, ky in self.keys:
+            if math.sqrt((kx - px) ** 2 + (ky - py) ** 2) <= vision_range:
+                margin = max(3, cell_size // 6)
+                x1 = (kx - start_x) * cell_size + margin
+                y1 = (ky - start_y) * cell_size + margin
+                x2 = x1 + cell_size - 2*margin
+                y2 = y1 + cell_size - 2*margin
+                self.canvas.create_oval(x1, y1, x2, y2, fill="gold", outline="orange", width=2)
+                key_symbol = "K" if self.platform == "Windows" else "🗝"
+                self.canvas.create_text(
+                    (kx - start_x) * cell_size + cell_size // 2,
+                    (ky - start_y) * cell_size + cell_size // 2,
+                    text=key_symbol,
+                    font=("Arial", self.font_size_small, "bold"),
+                    fill="darkgoldenrod"
+                )
+
+        # Draw teleporters
+        for pos1, pos2 in self.teleporters:
+            for tx, ty in [pos1, pos2]:
+                if math.sqrt((tx - px) ** 2 + (ty - py) ** 2) <= vision_range:
+                    margin = max(2, cell_size // 8)
+                    x1 = (tx - start_x) * cell_size + margin
+                    y1 = (ty - start_y) * cell_size + margin
+                    x2 = x1 + cell_size - 2*margin
+                    y2 = y1 + cell_size - 2*margin
+                    self.canvas.create_oval(
+                        x1, y1, x2, y2, fill="purple", outline="magenta", width=2
+                    )
+                    self.canvas.create_text(
+                        (tx - start_x) * cell_size + cell_size // 2,
+                        (ty - start_y) * cell_size + cell_size // 2,
+                        text="T",
+                        fill="white",
+                        font=("Arial", self.font_size_small, "bold"),
+                    )
+
+        # Draw enemy
+        if self.enemy_pos:
+            ex, ey = self.enemy_pos
+            if math.sqrt((ex - px) ** 2 + (ey - py) ** 2) <= vision_range:
+                margin = max(1, cell_size // 10)
+                x1 = (ex - start_x) * cell_size + margin
+                y1 = (ey - start_y) * cell_size + margin
+                x2 = x1 + cell_size - 2*margin
+                y2 = y1 + cell_size - 2*margin
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2, fill="red", outline="darkred", width=2
+                )
+                enemy_symbol = "E" if self.platform == "Windows" else "👹"
+                self.canvas.create_text(
+                    (ex - start_x) * cell_size + cell_size // 2,
+                    (ey - start_y) * cell_size + cell_size // 2,
+                    text=enemy_symbol,
+                    font=("Arial", self.font_size_medium, "bold"),
+                    fill="white"
+                )
+
+        # Draw start position (only if visible)
+        if math.sqrt((1 - px) ** 2 + (1 - py) ** 2) <= vision_range:
+            margin = max(2, cell_size // 8)
+            x1 = (1 - start_x) * cell_size + margin
+            y1 = (1 - start_y) * cell_size + margin
+            x2 = x1 + cell_size - 2*margin
+            y2 = y1 + cell_size - 2*margin
+            self.canvas.create_rectangle(
+                x1, y1, x2, y2, fill="lightgreen", outline="green", width=2
+            )
+
+        # Draw end position (only if visible and all keys collected)
+        end_x, end_y = self.end_pos
+        if math.sqrt((end_x - px) ** 2 + (end_y - py) ** 2) <= vision_range:
+            margin = max(2, cell_size // 8)
+            x1 = (end_x - start_x) * cell_size + margin
+            y1 = (end_y - start_y) * cell_size + margin
+            x2 = x1 + cell_size - 2*margin
+            y2 = y1 + cell_size - 2*margin
+            
+            if self.keys_collected >= self.required_keys:
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2, fill="lightcoral", outline="red", width=2
+                )
+                door_symbol = "EXIT" if self.platform == "Windows" else "🚪"
+                self.canvas.create_text(
+                    (end_x - start_x) * cell_size + cell_size // 2,
+                    (end_y - start_y) * cell_size + cell_size // 2,
+                    text=door_symbol,
+                    font=("Arial", self.font_size_small, "bold"),
+                    fill="darkred"
+                )
+            else:
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2, fill="gray", outline="darkgray", width=2
+                )
+                lock_symbol = "LOCK" if self.platform == "Windows" else "🔒"
+                self.canvas.create_text(
+                    (end_x - start_x) * cell_size + cell_size // 2,
+                    (end_y - start_y) * cell_size + cell_size // 2,
+                    text=lock_symbol,
+                    font=("Arial", self.font_size_small, "bold"),
+                    fill="white"
+                )
+
     def draw_player(self):
         """Draw player at current position"""
         self.canvas.delete("player")
@@ -659,6 +857,23 @@ class HardMazeGame:
         center_y = py * self.cell_size + self.cell_size // 2
         radius = int(self.cell_size * self.player_radius_factor)
 
+        self.canvas.create_oval(
+            center_x - radius,
+            center_y - radius,
+            center_x + radius,
+            center_y + radius,
+            fill="blue",
+            outline="darkblue",
+            width=2,
+            tags="player",
+        )
+
+    def draw_player_zoom(self, start_x, start_y, cell_size):
+        """Draw the player in zoomed-in coordinates"""
+        px, py = self.player_pos
+        center_x = (px - start_x) * cell_size + cell_size // 2
+        center_y = (py - start_y) * cell_size + cell_size // 2
+        radius = int(cell_size * self.player_radius_factor)
         self.canvas.create_oval(
             center_x - radius,
             center_y - radius,

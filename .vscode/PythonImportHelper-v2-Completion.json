@@ -1,0 +1,326 @@
+[
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "GameConfig",
+        "importPath": "config",
+        "description": "config",
+        "isExtraImport": true,
+        "detail": "config",
+        "documentation": {}
+    },
+    {
+        "label": "GameConfig",
+        "importPath": "config",
+        "description": "config",
+        "isExtraImport": true,
+        "detail": "config",
+        "documentation": {}
+    },
+    {
+        "label": "GameConfig",
+        "importPath": "config",
+        "description": "config",
+        "isExtraImport": true,
+        "detail": "config",
+        "documentation": {}
+    },
+    {
+        "label": "GameConfig",
+        "importPath": "config",
+        "description": "config",
+        "isExtraImport": true,
+        "detail": "config",
+        "documentation": {}
+    },
+    {
+        "label": "tkinter",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "GameObjects",
+        "importPath": "game_objects",
+        "description": "game_objects",
+        "isExtraImport": true,
+        "detail": "game_objects",
+        "documentation": {}
+    },
+    {
+        "label": "MazeGenerator",
+        "importPath": "maze_generator",
+        "description": "maze_generator",
+        "isExtraImport": true,
+        "detail": "maze_generator",
+        "documentation": {}
+    },
+    {
+        "label": "PathFinder",
+        "importPath": "path_finding",
+        "description": "path_finding",
+        "isExtraImport": true,
+        "detail": "path_finding",
+        "documentation": {}
+    },
+    {
+        "label": "MazeRenderer",
+        "importPath": "renderer",
+        "description": "renderer",
+        "isExtraImport": true,
+        "detail": "renderer",
+        "documentation": {}
+    },
+    {
+        "label": "heapq",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "heapq",
+        "description": "heapq",
+        "detail": "heapq",
+        "documentation": {}
+    },
+    {
+        "label": "deque",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "deque",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "deque",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "deque",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "deque",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "math",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "math",
+        "description": "math",
+        "detail": "math",
+        "documentation": {}
+    },
+    {
+        "label": "platform",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "platform",
+        "description": "platform",
+        "detail": "platform",
+        "documentation": {}
+    },
+    {
+        "label": "GameConfig",
+        "kind": 6,
+        "importPath": "main_game.config",
+        "description": "main_game.config",
+        "peekOfCode": "class GameConfig:\n    # Maze dimensions\n    DEFAULT_WIDTH = 35\n    DEFAULT_HEIGHT = 35\n    CELL_SIZE = 40\n    # Difficulty settings\n    VISIBILITY_RADIUS = 4\n    TIME_LIMIT = 300  # 5 minutes in seconds\n    REQUIRED_KEYS = 3\n    FLASHLIGHT_DURATION = 30  # seconds",
+        "detail": "main_game.config",
+        "documentation": {}
+    },
+    {
+        "label": "Player",
+        "kind": 6,
+        "importPath": "main_game.game_objects",
+        "description": "main_game.game_objects",
+        "peekOfCode": "class Player:\n    def __init__(self, start_pos=[1, 1]):\n        self.pos = start_pos[:]\n        self.moves_count = 0\n        self.keys_collected = 0\n    def move(self, new_pos):\n        \"\"\"Move player to new position\"\"\"\n        self.pos = new_pos[:]\n        self.moves_count += 1\n    def collect_key(self):",
+        "detail": "main_game.game_objects",
+        "documentation": {}
+    },
+    {
+        "label": "Enemy",
+        "kind": 6,
+        "importPath": "main_game.game_objects",
+        "description": "main_game.game_objects",
+        "peekOfCode": "class Enemy:\n    def __init__(self, pos=None):\n        self.pos = pos[:] if pos else None\n        self.path = []\n        self.move_counter = 0\n        self.initial_pos = pos[:] if pos else None\n    def create_patrol_path(self, maze, width, height):\n        \"\"\"Create a patrol path for the enemy\"\"\"\n        if not self.pos:\n            return",
+        "detail": "main_game.game_objects",
+        "documentation": {}
+    },
+    {
+        "label": "GameItems",
+        "kind": 6,
+        "importPath": "main_game.game_objects",
+        "description": "main_game.game_objects",
+        "peekOfCode": "class GameItems:\n    def __init__(self):\n        self.keys = []\n        self.traps = []\n        self.teleporters = []\n        self.moving_walls = []\n    def setup_items(self, empty_spaces, required_keys):\n        \"\"\"Set up all game items on the maze\"\"\"\n        available_spaces = empty_spaces[:]\n        # Place golden keys",
+        "detail": "main_game.game_objects",
+        "documentation": {}
+    },
+    {
+        "label": "PowerUps",
+        "kind": 6,
+        "importPath": "main_game.game_objects",
+        "description": "main_game.game_objects",
+        "peekOfCode": "class PowerUps:\n    def __init__(self):\n        self.has_flashlight = False\n        self.flashlight_duration = getattr(\n            GameConfig, \"FLASHLIGHT_DURATION\", 10000\n        )  # Default 10 seconds\n        self.flashlight_start = None\n    def activate_flashlight(self, current_time):\n        \"\"\"Activate flashlight power-up\"\"\"\n        if not self.has_flashlight:",
+        "detail": "main_game.game_objects",
+        "documentation": {}
+    },
+    {
+        "label": "GameObjects",
+        "kind": 6,
+        "importPath": "main_game.game_objects",
+        "description": "main_game.game_objects",
+        "peekOfCode": "class GameObjects:\n    \"\"\"A manager class to hold all game objects and state.\"\"\"\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n        # Create instances of all game object classes\n        self.player = Player()\n        self.enemy = Enemy()\n        self.items = GameItems()\n        self.power_ups = PowerUps()",
+        "detail": "main_game.game_objects",
+        "documentation": {}
+    },
+    {
+        "label": "HardMazeGame",
+        "kind": 6,
+        "importPath": "main_game.main",
+        "description": "main_game.main",
+        "peekOfCode": "class HardMazeGame:\n    def __init__(self, width=35, height=35):\n        # Initialize core game properties\n        self.width = width\n        self.height = height\n        self.cell_size = GameConfig.CELL_SIZE\n        # Initialize game modules\n        self.maze_generator = MazeGenerator(width, height)\n        self.path_finder = PathFinder()\n        self.game_objects = GameObjects(width, height)",
+        "detail": "main_game.main",
+        "documentation": {}
+    },
+    {
+        "label": "MazeGenerator",
+        "kind": 6,
+        "importPath": "main_game.maze_generator",
+        "description": "main_game.maze_generator",
+        "peekOfCode": "class MazeGenerator:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n    def generate_maze(self):\n        \"\"\"Generate a complex maze with multiple paths and dead ends\"\"\"\n        maze = [[1 for _ in range(self.width)] for _ in range(self.height)]\n        # Create main path using recursive backtracking\n        stack = []\n        start_x, start_y = 1, 1",
+        "detail": "main_game.maze_generator",
+        "documentation": {}
+    },
+    {
+        "label": "PathFinder",
+        "kind": 6,
+        "importPath": "main_game.path_finding",
+        "description": "main_game.path_finding",
+        "peekOfCode": "class PathFinder:\n    def __init__(self):\n        \"\"\"Initialize PathFinder without maze dependency\"\"\"\n        pass\n    def find_path(self, start, end, algorithm, maze):\n        \"\"\"Main pathfinding function that calls the selected algorithm\"\"\"\n        # Get maze dimensions\n        height = len(maze)\n        width = len(maze[0]) if maze else 0\n        start_time = time.time()",
+        "detail": "main_game.path_finding",
+        "documentation": {}
+    },
+    {
+        "label": "MazeRenderer",
+        "kind": 6,
+        "importPath": "main_game.renderer",
+        "description": "main_game.renderer",
+        "peekOfCode": "class MazeRenderer:\n    def __init__(self, canvas, width, height, cell_size):\n        self.canvas = canvas\n        self.width = width\n        self.height = height\n        self.original_cell_size = cell_size\n        self.cell_size = cell_size\n        # Camera/viewport for zoomed gameplay\n        self.camera_x = 0\n        self.camera_y = 0",
+        "detail": "main_game.renderer",
+        "documentation": {}
+    },
+    {
+        "label": "MazeGame",
+        "kind": 6,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "class MazeGame:\n    def __init__(self, width=25, height=25):\n        self.width = width\n        self.height = height\n        self.cell_size = 20\n        self.maze = []\n        self.player_pos = [1, 1]  # Starting position\n        self.end_pos = [width - 2, height - 2]  # End position\n        # Create the main window\n        self.root = tk.Tk()",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "HardMazeGame",
+        "kind": 6,
+        "importPath": "main2",
+        "description": "main2",
+        "peekOfCode": "class HardMazeGame:\n    def __init__(self, width=35, height=35):\n        self.width = width\n        self.height = height\n        self.cell_size = 40\n        self.maze = []\n        self.player_pos = [1, 1]\n        self.end_pos = [width - 2, height - 2]\n        # Camera/viewport for zooming\n        self.camera_x = 0",
+        "detail": "main2",
+        "documentation": {}
+    },
+    {
+        "label": "HardMazeGame",
+        "kind": 6,
+        "importPath": "main2_1",
+        "description": "main2_1",
+        "peekOfCode": "class HardMazeGame:\n    def __init__(self, width=35, height=35):\n        self.width = width\n        self.height = height\n        self.cell_size = 18\n        self.maze = []\n        self.player_pos = [1, 1]\n        self.end_pos = [width - 2, height - 2]\n        # Difficulty features\n        self.visibility_radius = 4  # Limited vision",
+        "detail": "main2_1",
+        "documentation": {}
+    },
+    {
+        "label": "HardMazeGame",
+        "kind": 6,
+        "importPath": "main3",
+        "description": "main3",
+        "peekOfCode": "class HardMazeGame:\n    def __init__(self, width=35, height=35):\n        self.solution_path = None  # <-- Move this to the top!\n        self.width = width\n        self.height = height\n        # Platform-specific adjustments\n        self.platform = platform.system()\n        self.setup_platform_settings()\n        self.maze = []\n        self.player_pos = [1, 1]",
+        "detail": "main3",
+        "documentation": {}
+    }
+]
