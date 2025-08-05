@@ -102,13 +102,13 @@ class HardMazeGame:
             self.emoji_font_size = 14
             self.player_radius_factor = 0.35
         elif self.platform == "Windows":
-            self.cell_size = 25
-            self.font_size_large = 18
-            self.font_size_medium = 15
-            self.font_size_small = 12
-            self.button_font_size = 18
-            self.emoji_font_size = 12
-            self.player_radius_factor = 0.3
+            self.cell_size = 29  # Increase this value for a bigger screen
+            self.font_size_large = 24
+            self.font_size_medium = 18
+            self.font_size_small = 15
+            self.button_font_size = 22
+            self.emoji_font_size = 18
+            self.player_radius_factor = 0.32
         else:  # Linux and others
             self.cell_size = 19
             self.font_size_large = 11
@@ -376,30 +376,51 @@ class HardMazeGame:
             self.enemy_pos = random.choice(enemy_candidates) if enemy_candidates else None
             self.create_enemy_path()
 
-            # Set move limit based on optimal path + buffer
-            optimal_path, _, _ = self.find_path([1, 1], self.end_pos, "BFS")
-            if not optimal_path:
-                continue  # No solution, try again
+            # --- NEW: Check solvability with enemy as a moving obstacle ---
+            def is_solvable_with_enemy():
+                # Treat all enemy patrol positions as blocked
+                blocked = set(tuple(pos) for pos in self.enemy_path)
+                # Helper for BFS that avoids enemy
+                def bfs_avoid_enemy(start, end):
+                    queue = deque([(start, [start])])
+                    visited = set([tuple(start)])
+                    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+                    while queue:
+                        (x, y), path = queue.popleft()
+                        if [x, y] == end:
+                            return True
+                        for dx, dy in directions:
+                            nx, ny = x + dx, y + dy
+                            if (
+                                0 <= nx < self.width and 0 <= ny < self.height
+                                and self.maze[ny][nx] == 0
+                                and (nx, ny) not in visited
+                                and (nx, ny) not in blocked
+                            ):
+                                visited.add((nx, ny))
+                                queue.append(([nx, ny], path + [[nx, ny]]))
+                    return False
 
-            # Now check: can the player collect all keys and reach the exit?
-            # Simulate collecting keys in order of nearest first
-            test_pos = [1, 1]
-            test_keys = [k[:] for k in self.keys]
-            success = True
-            while test_keys:
-                nearest = min(test_keys, key=lambda k: abs(k[0] - test_pos[0]) + abs(k[1] - test_pos[1]))
-                path, _, _ = self.find_path(test_pos, nearest, "BFS")
-                if not path:
-                    success = False
-                    break
-                test_pos = nearest[:]
-                test_keys.remove(nearest)
-            if success:
-                # Now check path from last key to exit
-                path, _, _ = self.find_path(test_pos, self.end_pos, "BFS")
-                if path:
+                # Check path to each key and from last key to exit
+                test_pos = [1, 1]
+                test_keys = [k[:] for k in self.keys]
+                while test_keys:
+                    nearest = min(test_keys, key=lambda k: abs(k[0] - test_pos[0]) + abs(k[1] - test_pos[1]))
+                    if not bfs_avoid_enemy(test_pos, nearest):
+                        return False
+                    test_pos = nearest[:]
+                    test_keys.remove(nearest)
+                # Path from last key to exit
+                if not bfs_avoid_enemy(test_pos, self.end_pos):
+                    return False
+                return True
+
+            if is_solvable_with_enemy():
+                # Set move limit based on optimal path + buffer
+                optimal_path, _, _ = self.find_path([1, 1], self.end_pos, "BFS")
+                if optimal_path:
                     self.max_moves = len(optimal_path) * 3  # 3x the optimal moves
-                    return  # Success: solvable maze with features
+                return  # Success: solvable maze with features
 
         # If teleporters are present and maze is unsolvable, try again with different placement
         # (This is the key fix: don't keep unsolvable teleporters)
